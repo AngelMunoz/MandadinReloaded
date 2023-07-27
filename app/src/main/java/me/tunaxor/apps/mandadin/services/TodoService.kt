@@ -6,14 +6,14 @@ import me.tunaxor.apps.mandadin.types.Todo
 interface ITodoService {
     suspend fun find(): List<Todo>
     suspend fun findOne(id: Int): Todo?
-    suspend fun create(title: String, description: String): Todo?
+    suspend fun create(title: String, description: String, isDone: Boolean?): Todo?
     suspend fun update(todo: Todo): Todo?
     suspend fun delete(id: Int): Boolean
 }
 
-class TodoService: ITodoService {
+class TodoService : ITodoService {
 
-    private val todos = mutableListOf(
+    private var todos = listOf(
         Todo(1, "title", "description", false, listOf("tag1", "tag2")),
         Todo(2, "title", "description", false, listOf("tag1", "tag2")),
         Todo(3, "title", "description", false, listOf("tag1", "tag2")),
@@ -31,7 +31,7 @@ class TodoService: ITodoService {
         return todos.find { it.id == id }
     }
 
-    override suspend fun create(title: String, description: String): Todo? {
+    override suspend fun create(title: String, description: String, isDone: Boolean?): Todo? {
         val todo =
             Todo(
                 todos.size + 1,
@@ -40,7 +40,7 @@ class TodoService: ITodoService {
                 false,
                 emptyList()
             )
-        todos.add(todo)
+        todos += todo
         delay(300)
         return todo
     }
@@ -48,7 +48,11 @@ class TodoService: ITodoService {
     override suspend fun update(todo: Todo): Todo? {
         val index = todos.indexOfFirst { it.id == todo.id }
         if (index == -1) return null
-        todos[index] = todo
+        todos = todos.map {
+            if (it.id == index) {
+                todo
+            } else it
+        }
         delay(300)
         return todo
     }
@@ -56,9 +60,8 @@ class TodoService: ITodoService {
     override suspend fun delete(id: Int): Boolean {
         val index = todos.indexOfFirst { it.id == id }
         if (index == -1) return false
-        todos.removeAt(index)
+        todos = todos.filter { it.id != index }
         delay(300)
         return true
     }
-
 }
