@@ -1,16 +1,21 @@
 package me.tunaxor.apps.mandadin.vm
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import me.tunaxor.apps.mandadin.services.ITodoService
 import me.tunaxor.apps.mandadin.types.Todo
 
 class TodoVm(private val service: ITodoService) : ViewModel() {
     var todos: List<Todo> by mutableStateOf(emptyList())
+        private set
+    var selected: Todo? by mutableStateOf(null)
+        private set
+
+    fun selectTodo(todo: Todo?) {
+        selected = todo
+    }
 
     suspend fun loadTodos() {
         todos = service.find()
