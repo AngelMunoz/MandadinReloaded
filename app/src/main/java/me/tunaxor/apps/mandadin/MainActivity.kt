@@ -1,17 +1,18 @@
 package me.tunaxor.apps.mandadin
 
+import kotlinx.coroutines.launch
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.*
+import androidx.compose.foundation.gestures.AnchoredDraggableState
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.*
 import androidx.compose.material.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
@@ -20,16 +21,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import me.tunaxor.apps.mandadin.types.Todo
 import me.tunaxor.apps.mandadin.ui.theme.MandadinTheme
 import me.tunaxor.apps.mandadin.vm.TodoVm
@@ -104,16 +98,34 @@ fun TodoForm(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TodoItem(todo: Todo, modifier: Modifier = Modifier) {
+    Surface {
+        Box(modifier = modifier
+            .padding(4.dp)
+            .fillMaxWidth()
+            .requiredHeight(50.dp)) {
+            Text(text = todo.title)
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TodoList(todos: List<Todo>, onSelectionChanged: (Todo?) -> Unit) {
-    LazyColumn {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(2.dp)
+    ) {
         items(todos, key = { it.id }) { todo ->
-            Row(modifier = Modifier.clickable {
-                onSelectionChanged(todo)
-            }) {
-                Surface(modifier = Modifier.padding(8.dp)) {
-                    Text(text = todo.title)
-                }
+            Row(modifier = Modifier
+                .animateItemPlacement()
+                .clickable {
+                    onSelectionChanged(todo)
+                }) {
+                TodoItem(todo = todo, modifier = Modifier.fillMaxWidth())
             }
         }
     }
