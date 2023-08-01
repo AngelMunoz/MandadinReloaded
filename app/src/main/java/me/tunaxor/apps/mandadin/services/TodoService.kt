@@ -7,7 +7,7 @@ import java.util.UUID
 interface ITodoService {
     suspend fun find(): List<Todo>
     suspend fun findOne(id: UUID): Todo?
-    suspend fun create(title: String, description: String, isDone: Boolean?): Todo?
+    suspend fun create(title: String, description: String): Todo?
     suspend fun update(todo: Todo): Todo?
     suspend fun delete(id: UUID): Boolean
 }
@@ -38,7 +38,7 @@ class TodoService : ITodoService {
         return todos.find { it.id == id }
     }
 
-    override suspend fun create(title: String, description: String, isDone: Boolean?): Todo? {
+    override suspend fun create(title: String, description: String): Todo? {
         val todo = Todo(
             UUID.randomUUID(), title, description, false, emptyList()
         )
