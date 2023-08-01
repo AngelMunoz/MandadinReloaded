@@ -10,68 +10,74 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import me.tunaxor.apps.mandadin.types.Todo
-import me.tunaxor.apps.mandadin.vm.TodoVm
+import me.tunaxor.apps.mandadin.vm.TodoFormVm
+import me.tunaxor.apps.mandadin.vm.TodoPageVm
 
 @Composable
 fun TodoForm(
     selected: Todo?,
+    modifier: Modifier = Modifier,
     onCancel: () -> Unit = {},
-    onSubmit: (Triple<String, String, Boolean>) -> Unit = {}
+    onSubmit: (TodoFormVm) -> Unit = {}
 ) {
-    var title by remember(selected) { mutableStateOf(selected?.title ?: "") }
-    var description by remember(selected) { mutableStateOf(selected?.description ?: "") }
-    var isDone by remember(selected) { mutableStateOf(selected?.isDone ?: false) }
-
-    Column(modifier = Modifier.padding(8.dp)) {
-        Row(modifier = Modifier.padding(4.dp)) {
-            TextField(value = title, onValueChange = {
-                title = it
+    val todo = TodoFormVm.from(selected)
+    Surface(
+        modifier = modifier
+            .padding(4.dp)
+            .fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            TextField(value = todo.title, onValueChange = { title ->
+                todo.title = title
             }, placeholder = { Text("Todo Title") }, label = { FormLabel(title = "Todo Title") })
-        }
-        Row(modifier = Modifier.padding(4.dp)) {
-            TextField(value = description,
-                onValueChange = {
-                    description = it
+            TextField(value = todo.description,
+                onValueChange = { description ->
+                    todo.description = description
                 },
                 placeholder = { Text("Todo Description") },
                 label = { FormLabel(title = "Todo Description") })
-        }
-        Row(modifier = Modifier.padding(4.dp)) {
-            FormLabel(title = "Is Done")
-            Switch(checked = isDone, onCheckedChange = { isDone = it })
-        }
-        Row(modifier = Modifier.padding(4.dp)) {
-            Button(onClick = {
-                onSubmit(Triple(title, description, isDone))
-            }) {
-                Text("Save Todo")
+            Row(modifier = Modifier.padding(4.dp)) {
+                FormLabel(title = "Is Done")
+                Switch(checked = todo.isDone, onCheckedChange = { todo.isDone = it })
             }
-
-            Button(onClick = {
-                onCancel()
-            }) {
-                Text("Cancel")
+            Row(modifier = Modifier.padding(4.dp)) {
+                Button(
+                    onClick = {
+                        onSubmit(todo)
+                    }, modifier = Modifier.padding(4.dp), shape = RoundedCornerShape(4.dp)
+                ) {
+                    Text("Save Todo")
+                }
+                TextButton(
+                    onClick = onCancel,
+                    modifier = Modifier.padding(4.dp),
+                ) {
+                    Text("Cancel")
+                }
             }
         }
     }
@@ -80,34 +86,55 @@ fun TodoForm(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TodoItem(todo: Todo, modifier: Modifier = Modifier) {
-    Surface {
-        Box(
-            modifier = modifier
-                .padding(4.dp)
-                .fillMaxWidth()
-                .requiredHeight(50.dp)
-        ) {
-            Text(text = todo.title)
+fun TodoItem(todo: Todo, modifier: Modifier = Modifier, onChecked: (Boolean) -> Unit) {
+    Box(
+        modifier = modifier
+            .padding(4.dp)
+            .fillMaxWidth()
+            .requiredHeight(50.dp)
+    ) {
+        val textDecoration = if (todo.isDone) TextDecoration.LineThrough else TextDecoration.None
+        Row {
+            Text(
+                text = todo.title,
+                modifier = Modifier
+                    .padding(4.dp)
+                    .weight(2f),
+                textDecoration = textDecoration
+            )
+            Text(
+                text = "${todo.description.take(20)}...",
+                modifier = Modifier
+                    .padding(4.dp)
+                    .weight(1f),
+                textDecoration = textDecoration
+            )
+            Checkbox(checked = todo.isDone, onCheckedChange = { onChecked(it) })
         }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TodoList(todos: List<Todo>, onSelectionChanged: (Todo?) -> Unit) {
-    LazyColumn(
-        modifier = Modifier
+fun TodoList(
+    todos: List<Todo>, modifier: Modifier = Modifier, onTodoCheckChanged: (Todo, Boolean) -> Unit, onSelectionChanged: (Todo?) -> Unit
+) {
+    Surface(
+        modifier = modifier
             .fillMaxWidth()
             .padding(2.dp)
     ) {
-        items(todos, key = { it.id }) { todo ->
-            Row(modifier = Modifier
-                .animateItemPlacement()
-                .clickable {
-                    onSelectionChanged(todo)
-                }) {
-                TodoItem(todo = todo, modifier = Modifier.fillMaxWidth())
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+            items(todos, key = { it.id }) { todo ->
+                Row(modifier = Modifier
+                    .animateItemPlacement()
+                    .clickable {
+                        onSelectionChanged(todo)
+                    }) {
+                    TodoItem(todo = todo, modifier = Modifier.fillMaxWidth(), onChecked = { checked ->
+                        onTodoCheckChanged(todo, checked)
+                    })
+                }
             }
         }
     }
@@ -116,36 +143,42 @@ fun TodoList(todos: List<Todo>, onSelectionChanged: (Todo?) -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TodoPage(todoVm: TodoVm) {
+fun TodoPage(todoPageVm: TodoPageVm) {
     val scope = rememberCoroutineScope()
-    val botomSheetScaffoldState = rememberBottomSheetScaffoldState(
+    val scaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = SheetState(
-            skipPartiallyExpanded = true, SheetValue.Hidden, skipHiddenState = false
+            skipPartiallyExpanded = false, initialValue = SheetValue.PartiallyExpanded
         )
     )
     LaunchedEffect(true) {
-        todoVm.loadTodos()
+        todoPageVm.loadTodos()
     }
 
-    BottomSheetScaffold(sheetContent = {
-        TodoForm(selected = todoVm.selected, onCancel = {
-            todoVm.selectTodo(null)
+    BottomSheetScaffold(scaffoldState = scaffoldState, sheetContent = {
+        TodoForm(selected = todoPageVm.selected, onCancel = {
+            todoPageVm.selectTodo(null)
             scope.launch {
-                botomSheetScaffoldState.bottomSheetState.hide()
+                if (scaffoldState.bottomSheetState.isVisible) {
+                    scaffoldState.bottomSheetState.hide()
+                }
             }
         }) {
             scope.launch {
-                todoVm.saveTodo(it, todoVm.selected)
-                todoVm.loadTodos()
+                todoPageVm.saveTodo(it, todoPageVm.selected)
+                todoPageVm.loadTodos()
             }
         }
     }) {
-        Column(modifier = Modifier.padding(it)) {
-            TodoList(todoVm.todos) { todo ->
-                todoVm.selectTodo(todo)
-                scope.launch {
-                    botomSheetScaffoldState.bottomSheetState.show()
-                }
+        TodoList(todoPageVm.todos, modifier = Modifier.padding(it), onTodoCheckChanged = {
+            todo, checked ->
+            scope.launch {
+                todoPageVm.updateCheck(todo, checked)
+                todoPageVm.loadTodos()
+            }
+        }) { todo ->
+            todoPageVm.selectTodo(todo)
+            scope.launch {
+                scaffoldState.bottomSheetState.expand()
             }
         }
     }
