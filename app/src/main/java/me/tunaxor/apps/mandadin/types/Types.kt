@@ -21,8 +21,8 @@ data class FsFedInstance(
     val name: String,
     val softwareName: String,
     val softwareVersion: String,
-    val iconUrl: String,
-    val faviconUrl: String,
+    val iconUrl: String?,
+    val faviconUrl: String?,
     val themeColor: String
 ) : Parcelable
 
@@ -36,8 +36,8 @@ data class MkUser(val username: String, val host: String?, val instance: FsFedIn
 data class FsFedNote(
     val id: String,
     val createdAt: String,
-    val url: String,
-    val reactions: Map<String, Long>,
+    val url: String?,
+    val reactions: List<Map<String, Int>>,
     val text: String,
     val user: MkUser,
     val reply: FsFedNote?
