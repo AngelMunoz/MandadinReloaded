@@ -4,10 +4,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import me.tunaxor.apps.mandadin.services.IFetchFsFedNotes
+import me.tunaxor.apps.mandadin.services.FsFediverseService
 import me.tunaxor.apps.mandadin.types.FsFedNote
 
-class FsFedNotesVm(val service: IFetchFsFedNotes) : ViewModel() {
+class FsFedNotesVm(val service: FsFediverseService) : ViewModel() {
     var notes: List<FsFedNote> by mutableStateOf(emptyList())
         private set
 

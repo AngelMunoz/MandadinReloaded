@@ -6,15 +6,15 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import me.tunaxor.apps.mandadin.types.FsFedNote
 
-interface IFetchFsFedNotes {
+interface FsFediverseService {
     suspend fun find(page: Int, limit: Int): List<FsFedNote>
 
     suspend fun findOne(note: String): FsFedNote?
 }
 
-class FsFedNotesService(private val http: HttpClient) : IFetchFsFedNotes {
+class FsFediverseImpl(private val http: HttpClient, private val baseUrl: String) : FsFediverseService {
     override suspend fun find(page: Int, limit: Int): List<FsFedNote> {
-        val response = http.get("") {
+        val response = http.get(baseUrl) {
             parameter("page", page)
             parameter("limit", limit)
         }
@@ -26,7 +26,7 @@ class FsFedNotesService(private val http: HttpClient) : IFetchFsFedNotes {
     }
 
     override suspend fun findOne(note: String): FsFedNote? {
-        val response = http.get("") {
+        val response = http.get(baseUrl) {
             parameter("note", note)
         }
         return if (response.status.value < 300) {

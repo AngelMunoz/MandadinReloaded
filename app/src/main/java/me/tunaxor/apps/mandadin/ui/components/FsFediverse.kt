@@ -8,12 +8,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import me.tunaxor.apps.mandadin.types.FsFedNote
 import me.tunaxor.apps.mandadin.vm.FsFedNotesVm
 
 
 @Composable
-fun FsFediverseNotesPage(vm: FsFedNotesVm = viewModel()) {
+fun FsFediverseNotesPage(navController: NavController, vm: FsFedNotesVm = viewModel()) {
     Text("Fs Fediverse Notes!")
 }
 
