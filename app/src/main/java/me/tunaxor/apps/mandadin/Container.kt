@@ -7,15 +7,15 @@ import io.ktor.serialization.kotlinx.json.json
 import me.tunaxor.apps.mandadin.services.*
 
 interface ITodos {
-    val iTodos: ITodoService
+    val Todos: TodoService
 }
 
-interface IFsFedNotes {
-    val iFsFedNotes: IFetchFsFedNotes
+interface IFsFediverse {
+    val FsFediverse: FsFediverseService
 }
 
-interface ApplicationEnv: ITodos, IFsFedNotes { }
-class AppEnv : ApplicationEnv {
+interface ApplicationEnv: ITodos, IFsFediverse { }
+class AppEnv(private val baseUrl: String) : ApplicationEnv {
 
     private val client  = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -23,9 +23,9 @@ class AppEnv : ApplicationEnv {
         }
     }
 
-    override val iTodos: ITodoService
-        get() = TodoService()
-    override val iFsFedNotes: IFetchFsFedNotes
-        get() = FsFedNotesService(client)
+    override val Todos: TodoService
+        get() = TodoImpl()
+    override val FsFediverse: FsFediverseService
+        get() = FsFediverseImpl(client, baseUrl = baseUrl)
 
 }
