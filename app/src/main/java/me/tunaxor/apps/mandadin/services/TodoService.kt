@@ -4,7 +4,7 @@ import kotlinx.coroutines.delay
 import me.tunaxor.apps.mandadin.types.Todo
 import java.util.UUID
 
-interface ITodoService {
+interface TodoService {
     suspend fun find(): List<Todo>
     suspend fun findOne(id: UUID): Todo?
     suspend fun create(title: String, description: String): Todo?
@@ -24,7 +24,7 @@ fun generateTodos(amount: Int = 5): List<Todo> {
     return todos
 }
 
-class TodoService : ITodoService {
+class TodoImpl : TodoService {
 
     private var todos = generateTodos()
 

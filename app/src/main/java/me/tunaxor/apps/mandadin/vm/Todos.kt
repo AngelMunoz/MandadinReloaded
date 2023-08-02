@@ -4,7 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import me.tunaxor.apps.mandadin.services.ITodoService
+import me.tunaxor.apps.mandadin.services.TodoService
 import me.tunaxor.apps.mandadin.types.Todo
 
 class TodoFormVm : ViewModel() {
@@ -25,7 +25,7 @@ class TodoFormVm : ViewModel() {
     }
 }
 
-class TodoPageVm(private val service: ITodoService) : ViewModel() {
+class TodoPageVm(private val service: TodoService) : ViewModel() {
     var todos: List<Todo> by mutableStateOf(emptyList())
         private set
     var selected: Todo? by mutableStateOf(null)
