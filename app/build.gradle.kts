@@ -1,3 +1,8 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
+android.buildFeatures.buildConfig = true
+val localProps = gradleLocalProperties(project.rootDir)
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -20,6 +25,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        buildConfigField("String", "SERVER_URL", localProps.getProperty("server.url"))
     }
 
     buildTypes {
@@ -40,6 +46,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.3"
