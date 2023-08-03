@@ -7,15 +7,51 @@ import androidx.lifecycle.ViewModel
 import me.tunaxor.apps.mandadin.services.FsFediverseService
 import me.tunaxor.apps.mandadin.types.FsFedNote
 
+enum class NotesPageDirection {
+    Initial,
+    Next,
+    Back
+}
+
 class FsFedNotesVm(val service: FsFediverseService) : ViewModel() {
-    var notes: List<FsFedNote> by mutableStateOf(emptyList())
+
+    var notes: Set<FsFedNote> by mutableStateOf(emptySet())
         private set
 
-    suspend fun fetchNotes(page: Int? = null, limit: Int? = null) {
-        notes = service.find(page ?: 1, limit ?: 10)
+    var page by mutableStateOf(1)
+        private set
+    var limit by mutableStateOf(10)
+
+
+    suspend fun loadNotes(direction: NotesPageDirection = NotesPageDirection.Initial) {
+        when(direction) {
+            NotesPageDirection.Initial -> fetchNotes(1, limit)
+            NotesPageDirection.Next -> next()
+            NotesPageDirection.Back -> back()
+        }
+    }
+
+    private suspend fun next() {
+        page += 1
+        fetchNotes(page, limit)
+    }
+
+    private suspend fun back() {
+        if(page == 1) {
+            return
+        }
+        page -= 1
+        fetchNotes(page, limit)
     }
 
     suspend fun fetchNote(note: String): FsFedNote? {
         return service.findOne(note)
     }
+
+
+    private suspend fun fetchNotes(page: Int, limit: Int) {
+        val _notes =  service.find(page, limit)
+        notes = _notes.toSet()
+    }
+
 }
