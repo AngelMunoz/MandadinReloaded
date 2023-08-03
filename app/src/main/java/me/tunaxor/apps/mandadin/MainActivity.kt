@@ -18,6 +18,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -28,15 +31,17 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import kotlinx.coroutines.flow.map
 import me.tunaxor.apps.mandadin.ui.components.FsFediverseNotePage
 import me.tunaxor.apps.mandadin.ui.components.FsFediverseNotesPage
+import me.tunaxor.apps.mandadin.ui.components.FsNavPagination
+import me.tunaxor.apps.mandadin.ui.components.FsNoteNav
 import me.tunaxor.apps.mandadin.ui.components.TodoPage
 import me.tunaxor.apps.mandadin.ui.theme.MandadinTheme
 import me.tunaxor.apps.mandadin.vm.FsFedNotesVm
 import me.tunaxor.apps.mandadin.vm.TodoPageVm
 
-fun NavGraphBuilder.fsFediverseNotes(nav: NavController, env: IFsFediverse) {
-    val vm = FsFedNotesVm(service = env.FsFediverse)
+fun NavGraphBuilder.fsFediverseNotes(nav: NavController, vm: FsFedNotesVm) {
     navigation(route = "fediverse", startDestination = "notes") {
         composable(
             route = "notes?page={page}&limit={limit}",
@@ -44,10 +49,7 @@ fun NavGraphBuilder.fsFediverseNotes(nav: NavController, env: IFsFediverse) {
                 navArgument("limit") { type = NavType.IntType; defaultValue = 1 }),
         ) {
             LaunchedEffect(true) {
-                vm.fetchNotes(
-                    page = it.arguments?.getInt("page") ?: 1,
-                    limit = it.arguments?.getInt("limit") ?: 10
-                )
+                vm.loadNotes()
             }
             FsFediverseNotesPage(nav, vm)
         }
@@ -55,7 +57,9 @@ fun NavGraphBuilder.fsFediverseNotes(nav: NavController, env: IFsFediverse) {
             route = "notes/{note}",
             arguments = listOf(navArgument("note") { type = NavType.StringType; nullable = true }),
         ) {
-            FsFediverseNotePage(it.arguments?.getString("note"), vm)
+            FsFediverseNotePage(it.arguments?.getString("note"), vm) { noteId ->
+                nav.navigate("notes/$noteId")
+            }
         }
 
     }
@@ -74,6 +78,11 @@ fun NavGraphBuilder.todos(iTodos: ITodos) {
 fun AppShell(appEnv: ApplicationEnv) {
     MandadinTheme {
         val ctrl = rememberNavController()
+        val route = remember {
+            ctrl.currentBackStackEntryFlow.map { entry -> entry.destination.route }
+        }.collectAsState(initial = null)
+        val fediverseVm =
+            rememberUpdatedState(newValue = FsFedNotesVm(service = appEnv.FsFediverse))
         // A surface container using the 'background' color from the theme
         Scaffold(topBar = {
             CenterAlignedTopAppBar(title = {
@@ -106,6 +115,16 @@ fun AppShell(appEnv: ApplicationEnv) {
                     )
                 }
             })
+        }, bottomBar = {
+            if (route.value == "notes?page={page}&limit={limit}") {
+                FsNavPagination(vm = fediverseVm.value)
+            }
+
+            if (route.value == "notes/{note}") {
+                FsNoteNav {
+                    ctrl.navigateUp()
+                }
+            }
         }) {
             Surface(
                 modifier = Modifier
@@ -115,7 +134,7 @@ fun AppShell(appEnv: ApplicationEnv) {
             ) {
                 NavHost(navController = ctrl, startDestination = "todos") {
                     todos(iTodos = appEnv)
-                    fsFediverseNotes(nav = ctrl, env = appEnv)
+                    fsFediverseNotes(nav = ctrl, vm = fediverseVm.value)
                 }
             }
         }
