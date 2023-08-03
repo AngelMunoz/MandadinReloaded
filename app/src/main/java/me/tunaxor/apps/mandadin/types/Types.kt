@@ -37,7 +37,6 @@ data class FsFedNote(
     val id: String,
     val createdAt: String,
     val url: String?,
-    val reactions: List<Map<String, Int>>,
     val text: String,
     val user: MkUser,
     val reply: FsFedNote?
