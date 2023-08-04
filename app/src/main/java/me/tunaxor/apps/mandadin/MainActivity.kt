@@ -32,10 +32,10 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import kotlinx.coroutines.flow.map
+import me.tunaxor.apps.mandadin.types.Routes
 import me.tunaxor.apps.mandadin.ui.components.FsFediverseNotePage
 import me.tunaxor.apps.mandadin.ui.components.FsFediverseNotesPage
 import me.tunaxor.apps.mandadin.ui.components.FsNavPagination
-import me.tunaxor.apps.mandadin.ui.components.FsNoteNav
 import me.tunaxor.apps.mandadin.ui.components.TodoPage
 import me.tunaxor.apps.mandadin.ui.theme.MandadinTheme
 import me.tunaxor.apps.mandadin.vm.FsFedNotesVm
@@ -44,7 +44,7 @@ import me.tunaxor.apps.mandadin.vm.TodoPageVm
 fun NavGraphBuilder.fsFediverseNotes(nav: NavController, vm: FsFedNotesVm) {
     navigation(route = "fediverse", startDestination = "notes") {
         composable(
-            route = "notes?page={page}&limit={limit}",
+            route = Routes.FediverseNotes,
             arguments = listOf(navArgument("page") { type = NavType.IntType; defaultValue = 10 },
                 navArgument("limit") { type = NavType.IntType; defaultValue = 1 }),
         ) {
@@ -54,10 +54,13 @@ fun NavGraphBuilder.fsFediverseNotes(nav: NavController, vm: FsFedNotesVm) {
             FsFediverseNotesPage(nav, vm)
         }
         composable(
-            route = "notes/{note}",
+            route = Routes.FediverseNote,
             arguments = listOf(navArgument("note") { type = NavType.StringType; nullable = true }),
         ) {
-            FsFediverseNotePage(it.arguments?.getString("note"), vm) { noteId ->
+            FsFediverseNotePage(
+                it.arguments?.getString("note"),
+                vm,
+                onBackRequested = { nav.navigateUp() }) { noteId ->
                 nav.navigate("notes/$noteId")
             }
         }
@@ -67,7 +70,7 @@ fun NavGraphBuilder.fsFediverseNotes(nav: NavController, vm: FsFedNotesVm) {
 
 fun NavGraphBuilder.todos(iTodos: ITodos) {
     val vm = TodoPageVm(iTodos.Todos)
-    composable(route = "todos") {
+    composable(route = Routes.Home) {
         TodoPage(vm)
     }
 }
@@ -83,7 +86,7 @@ fun AppShell(appEnv: ApplicationEnv) {
         }.collectAsState(initial = null)
         val fediverseVm =
             rememberUpdatedState(newValue = FsFedNotesVm(service = appEnv.FsFediverse))
-        // A surface container using the 'background' color from the theme
+
         Scaffold(topBar = {
             CenterAlignedTopAppBar(title = {
                 Text(
@@ -116,14 +119,8 @@ fun AppShell(appEnv: ApplicationEnv) {
                 }
             })
         }, bottomBar = {
-            if (route.value == "notes?page={page}&limit={limit}") {
+            if (route.value == Routes.FediverseNotes) {
                 FsNavPagination(vm = fediverseVm.value)
-            }
-
-            if (route.value == "notes/{note}") {
-                FsNoteNav {
-                    ctrl.navigateUp()
-                }
             }
         }) {
             Surface(

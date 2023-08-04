@@ -41,3 +41,9 @@ data class FsFedNote(
     val user: MkUser,
     val reply: FsFedNote?
 ) : Parcelable
+
+object Routes {
+    val Home = "todos"
+    val FediverseNotes = "notes?page={page}&limit={limit}"
+    val FediverseNote = "notes/{note}"
+}
